@@ -1,156 +1,109 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <title>Verifica Documento – Comune</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+  <meta charset="UTF-8" />
+  <title>Verifica Documento Protocollato</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f5f5f5;
-      margin: 0;
-      padding: 0;
+      background: #f4f6f8;
+      padding: 30px;
     }
-    .container {
-      max-width: 720px;
-      margin: 40px auto;
-      background: #ffffff;
-      padding: 24px;
-      border-radius: 6px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    .box {
+      max-width: 700px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
     h1 {
       margin-top: 0;
-      color: #2c3e50;
-    }
-    .box {
-      margin-top: 20px;
-      padding: 16px;
-      border-radius: 4px;
     }
     .ok {
-      background: #e8f5e9;
-      color: #1b5e20;
-      border: 1px solid #81c784;
+      color: green;
+      font-weight: bold;
     }
-    .error {
-      background: #ffebee;
-      color: #b71c1c;
-      border: 1px solid #e57373;
+    .ko {
+      color: red;
+      font-weight: bold;
     }
     .info {
-      background: #e3f2fd;
-      color: #0d47a1;
-      border: 1px solid #64b5f6;
+      margin-top: 15px;
+      padding: 10px;
+      background: #eef2f5;
+      border-radius: 5px;
+      font-size: 14px;
     }
     code {
-      background: #eee;
-      padding: 4px 6px;
-      border-radius: 4px;
-    }
-    footer {
-      margin-top: 30px;
-      font-size: 12px;
-      color: #555;
-      text-align: center;
+      word-break: break-all;
     }
   </style>
 </head>
 
 <body>
-  <div class="container">
+  <div class="box">
     <h1>Verifica documento protocollato</h1>
-
-    <div id="contenuto" class="box info">
-      Verifica in corso…
-    </div>
-
-    <footer>
-      Portale pubblico di verifica documenti – Comune di Pogliano Milanese
-    </footer>
+    <div id="esito">Verifica in corso…</div>
+    <div id="dettagli" class="info" style="display:none"></div>
   </div>
 
   <script>
-    function getParam(name) {
-      const url = new URL(window.location.href);
-      return url.searchParams.get(name);
+    const params = new URLSearchParams(window.location.search);
+    const protocollo = params.get("protocollo");
+    const hashQr = params.get("hash");
+
+    const esito = document.getElementById("esito");
+    const dettagli = document.getElementById("dettagli");
+
+    if (!protocollo || !hashQr) {
+      esito.innerHTML = "<span class='ko'>❌ Errore</span><br>Parametri mancanti. QR Code non valido.";
+      throw new Error("Parametri mancanti");
     }
 
-    const protocollo = getParam("protocollo");
-    const hash = getParam("hash");
+    fetch("registro_protocollo.csv")
+      .then(res => res.text())
+      .then(csv => {
+        const righe = csv.split("\n").slice(1);
 
-    const contenuto = document.getElementById("contenuto");
+        for (const riga of righe) {
+          if (!riga.trim()) continue;
 
-    if (!protocollo || !hash) {
-      contenuto.className = "box error";
-      contenuto.innerHTML = `
-        <strong>Errore</strong><br>
-        Parametri mancanti.<br>
-        Il QR Code non è valido.
-      `;
-    } else {
-      fetch("registro_protocollo.csv")
-        .then(response => {
-          if (!response.ok) {
-            throw new Error("Registro non trovato");
-          }
-          return response.text();
-        })
-        .then(csv => {
-          const righe = csv.split("\n").slice(1);
+          const campi = riga.split(",");
 
-          let trovato = false;
+          const prot = campi[0];
+          const data = campi[1];
+          const ods = campi[2];
+          const tecnico = campi[3];
+          const file = campi[4];
+          const hashOriginale = campi[5];
+          const stato = campi[7];
 
-          for (const riga of righe) {
-            if (!riga.trim()) continue;
-
-            const campi = riga.split(",");
-
-            const prot = campi[0];
-            const hashOriginale = campi[5];
-            const hashFirmato = campi[6];
-            const stato = campi[7];
-
-            if (prot === protocollo) {
-              trovato = true;
-
-              if (hash === hashOriginale || hash === hashFirmato) {
-                contenuto.className = "box ok";
-                contenuto.innerHTML = `
-                  <strong>Documento valido</strong><br><br>
-                  <b>Protocollo:</b> ${protocollo}<br>
-                  <b>Stato:</b> ${stato}<br>
-                  <b>Hash verificato:</b><br>
-                  <code>${hash}</code>
-                `;
-              } else {
-                contenuto.className = "box error";
-                contenuto.innerHTML = `
-                  <strong>Documento NON valido</strong><br><br>
-                  Il protocollo esiste ma l'hash non coincide.
-                `;
-              }
-              break;
-            }
-          }
-
-          if (!trovato) {
-            contenuto.className = "box error";
-            contenuto.innerHTML = `
-              <strong>Documento NON trovato</strong><br><br>
-              Il protocollo indicato non risulta nel registro pubblico.
+          if (prot === protocollo && hashOriginale === hashQr) {
+            esito.innerHTML = "<span class='ok'>✅ DOCUMENTO VALIDO</span>";
+            dettagli.style.display = "block";
+            dettagli.innerHTML = `
+              <b>Protocollo:</b> ${prot}<br>
+              <b>Data:</b> ${data}<br>
+              <b>ODS:</b> ${ods}<br>
+              <b>Tecnico:</b> ${tecnico}<br>
+              <b>File:</b> ${file}<br>
+              <b>Stato:</b> ${stato}<br>
+              <b>Hash:</b><br><code>${hashOriginale}</code>
             `;
+            return;
           }
-        })
-        .catch(err => {
-          contenuto.className = "box error";
-          contenuto.innerHTML = `
-            <strong>Errore</strong><br>
-            Impossibile caricare il registro.
-          `;
-        });
-    }
+        }
+
+        esito.innerHTML =
+          "<span class='ko'>❌ DOCUMENTO NON VALIDO</span><br>Il protocollo indicato non risulta nel registro pubblico.";
+      })
+      .catch(err => {
+        esito.innerHTML =
+          "<span class='ko'>❌ Errore</span><br>Impossibile verificare il documento.";
+        console.error(err);
+      });
   </script>
 </body>
 </html>
