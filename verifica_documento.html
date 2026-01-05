@@ -1,75 +1,38 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <title>Verifica Documento – Comune</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
+  <meta charset="UTF-8">
+  <title>Verifica documento protocollato</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f4f6f8;
+      max-width: 700px;
+      margin: 40px auto;
       padding: 20px;
     }
+    .ok { color: green; font-weight: bold; }
+    .err { color: red; font-weight: bold; }
     .box {
-      max-width: 720px;
-      margin: auto;
-      background: white;
-      padding: 24px;
-      border-radius: 8px;
-      box-shadow: 0 4px 10px rgba(0,0,0,.1);
-    }
-    h1 {
-      margin-top: 0;
-    }
-    .ok {
-      color: green;
-      font-weight: bold;
-    }
-    .ko {
-      color: red;
-      font-weight: bold;
-    }
-    .row {
-      margin-bottom: 8px;
-    }
-    code {
-      background: #eee;
-      padding: 4px 6px;
-      border-radius: 4px;
-      display: inline-block;
+      border: 1px solid #ccc;
+      padding: 15px;
+      margin-top: 20px;
     }
   </style>
 </head>
-
 <body>
-  <div class="box">
-    <h1>Verifica documento informatico</h1>
 
-    <div id="esito">Verifica in corso…</div>
+<h1>Verifica documento protocollato</h1>
 
-    <hr />
-
-    <div id="dettagli" style="display:none">
-      <div class="row"><b>Protocollo:</b> <span id="prot"></span></div>
-      <div class="row"><b>ODS:</b> <span id="ods"></span></div>
-      <div class="row"><b>Tecnico:</b> <span id="tecnico"></span></div>
-      <div class="row"><b>Stato:</b> <span id="stato"></span></div>
-      <div class="row"><b>Hash documento:</b><br><code id="hash"></code></div>
-    </div>
-  </div>
+<div id="esito">Verifica in corso…</div>
 
 <script>
 const params = new URLSearchParams(window.location.search);
 const protocollo = params.get('prot');
-const hash = params.get('hash');
 
-const esito = document.getElementById('esito');
-const dettagli = document.getElementById('dettagli');
-
-if (!protocollo || !hash) {
-  esito.innerHTML = '<p class="ko">Parametri mancanti nel QR</p>';
-  throw new Error('Parametri mancanti');
+if (!protocollo) {
+  document.getElementById('esito').innerHTML =
+    '<p class="err">Errore: protocollo mancante</p>';
+  throw new Error('Protocollo mancante');
 }
 
 fetch('registro_protocollo.csv')
@@ -77,51 +40,33 @@ fetch('registro_protocollo.csv')
   .then(csv => {
     const righe = csv.trim().split('\n').slice(1);
 
-    const trovata = righe
-      .map(r => r.split(','))
-      .find(c => c[0] === protocollo);
+    for (const riga of righe) {
+      const campi = riga.split(',');
 
-    if (!trovata) {
-      esito.innerHTML =
-        '<p class="ko">Protocollo NON presente nel registro</p>';
-      return;
+      if (campi[0] === protocollo) {
+        document.getElementById('esito').innerHTML = `
+          <p class="ok">✔️ Documento valido</p>
+          <div class="box">
+            <p><strong>Protocollo:</strong> ${campi[0]}</p>
+            <p><strong>Data:</strong> ${campi[1]}</p>
+            <p><strong>ODS:</strong> ${campi[2]}</p>
+            <p><strong>Tecnico:</strong> ${campi[3]}</p>
+            <p><strong>File:</strong> ${campi[4]}</p>
+            <p><strong>Stato:</strong> ${campi[7]}</p>
+          </div>
+        `;
+        return;
+      }
     }
 
-    const [
-      prot,
-      data,
-      ods,
-      tecnico,
-      file,
-      hashOrig,
-      hashFirmato,
-      stato,
-      hashPrec,
-      hashRiga
-    ] = trovata;
-
-    if (hashOrig !== hash && hashFirmato !== hash) {
-      esito.innerHTML =
-        '<p class="ko">Hash NON corrispondente – documento alterato</p>';
-      return;
-    }
-
-    esito.innerHTML =
-      '<p class="ok">Documento autentico e verificato ✔️</p>';
-
-    document.getElementById('prot').innerText = prot;
-    document.getElementById('ods').innerText = ods;
-    document.getElementById('tecnico').innerText = tecnico;
-    document.getElementById('stato').innerText = stato;
-    document.getElementById('hash').innerText = hash;
-
-    dettagli.style.display = 'block';
+    document.getElementById('esito').innerHTML =
+      '<p class="err">❌ Documento non trovato nel registro pubblico</p>';
   })
-  .catch(err => {
-    esito.innerHTML =
-      '<p class="ko">Errore nella verifica del documento</p>';
-    console.error(err);
+  .catch(() => {
+    document.getElementById('esito').innerHTML =
+      '<p class="err">Errore di lettura del registro</p>';
   });
 </script>
+
 </body>
 </html>
