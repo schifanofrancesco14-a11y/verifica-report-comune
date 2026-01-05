@@ -44,17 +44,25 @@ fetch('registro_protocollo.csv')
       const campi = riga.split(',');
 
       if (campi[0] === protocollo) {
-        document.getElementById('esito').innerHTML = `
-          <p class="ok">✔️ Documento valido</p>
-          <div class="box">
-            <p><strong>Protocollo:</strong> ${campi[0]}</p>
-            <p><strong>Data:</strong> ${campi[1]}</p>
-            <p><strong>ODS:</strong> ${campi[2]}</p>
-            <p><strong>Tecnico:</strong> ${campi[3]}</p>
-            <p><strong>File:</strong> ${campi[4]}</p>
-            <p><strong>Stato:</strong> ${campi[7]}</p>
-          </div>
-        `;
+      document.getElementById('esito').innerHTML = `
+  <p class="ok">✔️ Documento valido</p>
+  <div class="box">
+    <p><strong>Protocollo:</strong> ${campi[0]}</p>
+    <p><strong>Data:</strong> ${campi[1]}</p>
+    <p><strong>ODS:</strong> ${campi[2]}</p>
+    <p><strong>Tecnico:</strong> ${campi[3]}</p>
+    <p><strong>File:</strong> ${campi[4]}</p>
+    <p><strong>Stato:</strong> ${campi[7]}</p>
+
+    <hr>
+
+    <p><strong>Hash originale:</strong><br><code>${campi[5]}</code></p>
+    <p><strong>Hash firmato:</strong><br><code>${campi[6] || '—'}</code></p>
+    <p><strong>Hash precedente:</strong><br><code>${campi[8]}</code></p>
+    <p><strong>Hash riga:</strong><br><code>${campi[9]}</code></p>
+  </div>
+`;
+  
         return;
       }
     }
