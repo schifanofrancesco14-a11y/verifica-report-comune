@@ -1,80 +1,20 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <title>Verifica documento protocollato</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 700px;
-      margin: 40px auto;
-      padding: 20px;
-    }
-    .ok { color: green; font-weight: bold; }
-    .err { color: red; font-weight: bold; }
-    .box {
-      border: 1px solid #ccc;
-      padding: 15px;
-      margin-top: 20px;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <title>Verifica documento – Comune</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h1>Verifica documento protocollato</h1>
+  <h1>Verifica documento informatico</h1>
 
-<div id="esito">Verifica in corso…</div>
+  <p>Protocollo:</p>
+  <input id="protocollo" type="text" />
+  <button onclick="verifica()">Verifica</button>
 
-<script>
-const params = new URLSearchParams(window.location.search);
-const protocollo = params.get('prot');
+  <pre id="output"></pre>
 
-if (!protocollo) {
-  document.getElementById('esito').innerHTML =
-    '<p class="err">Errore: protocollo mancante</p>';
-  throw new Error('Protocollo mancante');
-}
-
-fetch('registro_protocollo.csv')
-  .then(r => r.text())
-  .then(csv => {
-    const righe = csv.trim().split('\n').slice(1);
-
-    for (const riga of righe) {
-      const campi = riga.split(',');
-
-      if (campi[0] === protocollo) {
-      document.getElementById('esito').innerHTML = `
-  <p class="ok">✔️ Documento valido</p>
-  <div class="box">
-    <p><strong>Protocollo:</strong> ${campi[0]}</p>
-    <p><strong>Data:</strong> ${campi[1]}</p>
-    <p><strong>ODS:</strong> ${campi[2]}</p>
-    <p><strong>Tecnico:</strong> ${campi[3]}</p>
-    <p><strong>File:</strong> ${campi[4]}</p>
-    <p><strong>Stato:</strong> ${campi[7]}</p>
-
-    <hr>
-
-    <p><strong>Hash originale:</strong><br><code>${campi[5]}</code></p>
-    <p><strong>Hash firmato:</strong><br><code>${campi[6] || '—'}</code></p>
-    <p><strong>Hash precedente:</strong><br><code>${campi[8]}</code></p>
-    <p><strong>Hash riga:</strong><br><code>${campi[9]}</code></p>
-  </div>
-`;
-  
-        return;
-      }
-    }
-
-    document.getElementById('esito').innerHTML =
-      '<p class="err">❌ Documento non trovato nel registro pubblico</p>';
-  })
-  .catch(() => {
-    document.getElementById('esito').innerHTML =
-      '<p class="err">Errore di lettura del registro</p>';
-  });
-</script>
-
+  <script src="script.js"></script>
 </body>
 </html>
