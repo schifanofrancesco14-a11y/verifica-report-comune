@@ -2,20 +2,34 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>Verifica documenti - Comune</title>
+  <title>Verifica documenti protocollati</title>
+
+  <!-- Disabilita traduzione automatica -->
+  <meta name="google" content="notranslate">
+  <meta http-equiv="Content-Language" content="it">
+
+  <link rel="stylesheet" href="stile.css">
 </head>
 <body>
-  <h1>Portale verifica documenti</h1>
+
+  <h1>Verifica documenti protocollati</h1>
 
   <p>
-    Questo è il portale ufficiale per la verifica dei documenti
-    protocollati digitalmente.
+    Questo portale consente la verifica pubblica dei documenti
+    protocollati digitalmente dal Comune.
   </p>
 
-  <p>
-    <a href="verifica/verifica_documento.html">
-      Vai alla verifica documento
-    </a>
-  </p>
+  <label>Protocollo</label>
+  <input id="protocollo" placeholder="Es. PROT-2026-000012">
+
+  <label>Hash SHA256</label>
+  <input id="hash" placeholder="Incolla hash SHA256">
+
+  <button onclick="verifica()">Verifica</button>
+
+  <div id="esito"></div>
+
+  <script src="script.js"></script>
+
 </body>
 </html>
