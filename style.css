@@ -5,18 +5,41 @@ body {
   padding: 20px;
 }
 
+/* Campi input */
 input {
   padding: 6px;
-  width: 250px;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 10px;
 }
 
+/* Pulsante */
 button {
-  padding: 6px 12px;
+  padding: 8px 16px;
+  margin-top: 10px;
+  cursor: pointer;
 }
 
+/* Output */
 pre {
   background: #f4f4f4;
   padding: 12px;
   margin-top: 20px;
   white-space: pre-wrap;
+}
+
+/* Messaggi stato */
+.ok {
+  color: green;
+  font-weight: bold;
+}
+
+.err {
+  color: darkred;
+  font-weight: bold;
+}
+
+.warn {
+  color: orange;
+  font-weight: bold;
 }
